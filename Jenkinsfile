@@ -4,11 +4,11 @@ pipeline {
     agent {
         docker { 
             image 'eclipse-temurin:17' 
-            args '-v /var/jenkins_home/.m2:/home/jenkins/.m2' // Mount the Maven repository
+            // args '-v /var/jenkins_home/.m2:/home/jenkins/.m2' // Mount the Maven repository
         }
     }
     environment {
-        MAVEN_OPTS = '-Dmaven.repo.local=/home/jenkins/.m2/repository' // Use local Maven repo
+        MAVEN_OPTS = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository' // Use local Maven repo
     }
     stages {
         stage('Commit') {
