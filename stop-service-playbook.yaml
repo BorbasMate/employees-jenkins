@@ -1,0 +1,8 @@
+#ansible playbbok to stop a running service
+- hosts: all
+  tasks:
+    - name: Stop service
+      become: true
+      ansible.builtin.systemd:
+        name: employees
+        state: stopped
