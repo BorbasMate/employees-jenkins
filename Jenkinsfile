@@ -4,7 +4,6 @@ pipeline {
     agent {
         docker { 
             image 'eclipse-temurin:17' 
-            // args '-v /var/jenkins_home/.m2:/home/jenkins/.m2' // Mount the Maven repository
         }
     }
     environment {
