@@ -8,24 +8,14 @@ pipeline {
     }
     environment {
         MAVEN_OPTS = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository' // Use local Maven repo
+        DB_HOST = 'host.docker.internal'
+        DB_PORT = '3306'
+        DB_NAME = 'employees'
+        DB_USER = 'root'
+        DB_PASSWORD = 'test1234'
     }
         
     stages {
-        stage('Setup MariaDB') {
-            steps {
-                script {
-                    // Run MariaDB container
-                    sh '''
-                    docker run -d --name mariadb \
-                      -e MARIADB_DATABASE=employees \
-                      -e MARIADB_USER=root \
-                      -e MARIADB_PASSWORD=test1234 \
-                      -p 3306:3306 \
-                      mariadb:latest
-                    '''
-                }
-            }
-        }
         stage('Commit') {
             steps {
                 echo "Commit stage"
@@ -37,7 +27,12 @@ pipeline {
         stage('Acceptance') {
             steps {
                 echo "Acceptance stage"
-                sh "./mvnw -B integration-test -Dbuild.number=${BUILD_NUMBER}"
+                sh "./mvnw -B integration-test -Dbuild.number=${BUILD_NUMBER} \
+                    -Ddb.host=${DB_HOST} \
+                    -Ddb.port=${DB_PORT} \
+                    -Ddb.name=${DB_NAME} \
+                    -Ddb.user=${DB_USER} \
+                    -Ddb.password=${DB_PASSWORD}"
             }
         }   
     }
@@ -50,11 +45,6 @@ pipeline {
         }
         always {
             echo 'Pipeline completed!'
-            script {
-                // Stop and remove the MariaDB container
-                sh 'docker stop mariadb || true'
-                sh 'docker rm mariadb || true'
-            }
         }
     }
 }
