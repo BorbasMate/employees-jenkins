@@ -13,7 +13,9 @@ pipeline {
         stage('Commit') {
             steps {
                 echo "Commit stage"
-                sh "./mvnw -B package"  //-B flag makes this readable in Jenkins
+                // original code before add of version number
+                // sh "./mvnw -B package"  //-B flag makes this readable in Jenkins
+                sh "./mvnw -B package -Dbuild.number=${BUILD_NUMBER}"
             }
         } 
         stage('Acceptance') {

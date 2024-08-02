@@ -12,7 +12,9 @@
 
     <groupId>bmg</groupId>
     <artifactId>employees</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.0-${build.number}</version>
+    <!-- the original -->
+    <!-- <version>1.0.0</version> -->
 
     <distributionManagement>
         <!-- nexus -->
@@ -43,6 +45,8 @@
             ${project.basedir}/target/surefire-reports/,${project.basedir}/target/failsafe-reports/
         </sonar.junit.reportPaths>  
         <sonar.exclusions>pom.xml</sonar.exclusions>
+        <!-- add for Jenkins to follow versions -->
+        <build.number>unknown</build.number>
     </properties>
 
     <dependencies>
