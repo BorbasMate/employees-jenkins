@@ -17,7 +17,7 @@ pipeline {
     }
     environment {
         MAVEN_OPTS = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository' // Use local Maven repo
-        DB_URL = 'jdbc:mariadb://localhost:3306/employees'
+        DB_URL = 'jdbc:mariadb://mariadb:3306/employees'
     }
     stages {
         stage('Commit') {
