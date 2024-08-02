@@ -5,19 +5,23 @@ pipeline {
         docker { 
             image 'eclipse-temurin:17' 
         }
-        services:
-            mariadb:
-                image: 'mariadb:11.4.2'
-                env:
-                    MARIADB_USER: 'root'
-                    MARIADB_PASSWORD: 'test1234'
-                    MARIADB_DATABASE: 'employees'
-                ports:
-                    - '3306:3306'
     }
     environment {
         MAVEN_OPTS = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository' // Use local Maven repo
         DB_URL = 'jdbc:mariadb://mariadb:3306/employees' //Jenkins uses the service name as domain
+    }
+    services {
+        mariadb {
+            image 'mariadb:11.4.2'
+            env {
+                MARIADB_USER = 'root'
+                MARIADB_PASSWORD = 'test1234'
+                MARIADB_DATABASE = 'employees'
+            }
+            ports {
+                '3306:3306'
+            }
+        }
     }
     stages {
         stage('Commit') {
