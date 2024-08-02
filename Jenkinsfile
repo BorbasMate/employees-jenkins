@@ -14,13 +14,14 @@ pipeline {
             steps {
                 echo "Commit stage"
                 // original code before add of version number
-                // sh "./mvnw -B package"  //-B flag makes this readable in Jenkins
+                // sh "./mvnw -B package"  //-B flag makes this readable in Jenkins - no colors used
                 sh "./mvnw -B package -Dbuild.number=${BUILD_NUMBER}"
             }
         } 
         stage('Acceptance') {
             steps {
                 echo "Acceptance stage"
+                sh "./mvnw -B integration-test -Dbuild.number=${BUILD_NUMBER}"
             }
         }   
     }
