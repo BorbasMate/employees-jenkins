@@ -10,19 +10,32 @@ pipeline {
         MAVEN_OPTS = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository' // Use local Maven repo
     }
     stages {
+        pipeline {
+    agent any
+    
+    environment {
+        MAVEN_OPTS = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository' // Use local Maven repo
+    }
+
+    stages {
         stage('Set up MariaDB') {
             steps {
                 script {
-                    // Start MariaDB container
-                    docker.image('mariadb:11.4.2').withRun('-e MARIADB_USER=root -e MARIADB_PASSWORD=test1234 -e MARIADB_DATABASE=employees -p 3306:3306') 
-                        // Wait for the database to start
-                        sleep 30 // adjust if needed for the database to be ready
-                        
-                        // Run the rest of the pipeline
-                        script {
-                            // Set the DB URL for subsequent stages
-                            env.DB_URL = "jdbc:mariadb://localhost:3306/employees"
-                        }
+                    writeFile file: 'docker-compose.yml', text: """
+                    version: '3.1'
+                    services:
+                      mariadb:
+                        image: mariadb:11.4.2
+                        environment:
+                          MARIADB_USER: root
+                          MARIADB_PASSWORD: test1234
+                          MARIADB_DATABASE: employees
+                        ports:
+                          - "3306:3306"
+                    """
+                    sh 'docker-compose up -d'
+                    // Wait for the database to be ready
+                    sleep 30 // adjust the sleep time if necessary
                 }
             }
         }
