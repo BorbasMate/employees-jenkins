@@ -1,16 +1,30 @@
 pipeline {
     // first pipelne run with any -> but we want to run the build in java environment -> for this we created the jenkins with a docker client
     // agent any
+    // second agent if docker client was not needed -> only use mvnw for build
+    // agent {
+    //     docker { 
+    //         image 'eclipse-temurin:17' 
+    //     }
+    // }
+    // we will build an image that contains eclipse-temurin:17 + a docker client that will talk to the docker engine on our host machine
     agent {
-        docker { 
-            image 'eclipse-temurin:17' 
+        dockerfile {
+            filename 'Dockerfile.build'
+            args '-e DOCKER_CONFIG=./docker'
         }
     }
+
     environment {
         MAVEN_OPTS = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository' // Use local Maven repo
         DB_URL = 'jdbc:mariadb://host.docker.internal:3306/employees'
         DB_USER = 'root'
         DB_PASSWORD = 'test1234'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
+        VERSION_NUMBER = sh (
+                    script: './mvnw help:evaluate -Dexpression=project.version -Dbuild.number=${BUILD_NUMBER} -q -DforceStdout',
+                    returnStdout: true).trim()                
+        IMAGE_NAME = "mborbas/employees:${VERSION_NUMBER}"
     }
         
     stages {
@@ -19,7 +33,9 @@ pipeline {
                 echo "Commit stage"
                 // original code before add of version number
                 // sh "./mvnw -B package"  //-B flag makes this readable in Jenkins - no colors used
-                sh "./mvnw -B package -Dbuild.number=${BUILD_NUMBER}"
+                // second code before versioning 
+                // sh "./mvnw -B package -Dbuild.number=${BUILD_NUMBER}"
+                sh "./mvnw -B clean package -Dbuild.number=${BUILD_NUMBER}"
             }
         } 
         stage('Acceptance') {
@@ -30,7 +46,17 @@ pipeline {
                     -Dtest.datasource.username=${DB_USER} \
                     -Dtest.datasource.password=${DB_PASSWORD}"
             }
-        }   
+        } 
+        stage('Docker') {
+            steps {
+                sh "docker build -f Dockerfile.layered -t ${IMAGE_NAME} ."
+                sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u=${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                sh "docker push ${IMAGE_NAME}"
+                // we also push the image with latest tag, to be fully precize
+                sh "docker tag ${IMAGE_NAME} mborbas/employees:latest"
+                sh "docker push mborbas/employees:latest"                
+            }
+}  
     }
     post {
         success {

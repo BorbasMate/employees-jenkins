@@ -2,7 +2,10 @@ FROM eclipse-temurin:17 as builder
 
 WORKDIR /app
 
-COPY target/employees-1.0.0.jar employees.jar
+# original code before versioning
+# COPY target/employees-1.0.0.jar employees.jar
+
+COPY target/*.jar employees.jar
 
 RUN java -Djarmode=layertools -jar employees.jar extract
 
