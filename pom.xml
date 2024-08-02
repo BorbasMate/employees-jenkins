@@ -12,7 +12,7 @@
 
     <groupId>bmg</groupId>
     <artifactId>employees</artifactId>
-    <version>1.0.0-${build.number}</version>
+    <version>${revision}</version>
     <!-- the original -->
     <!-- <version>1.0.0</version> -->
 
@@ -47,6 +47,7 @@
         <sonar.exclusions>pom.xml</sonar.exclusions>
         <!-- add for Jenkins to follow versions -->
         <build.number>unknown</build.number>
+        <revision>1.0.0-${build.number}</revision>
     </properties>
 
     <dependencies>
