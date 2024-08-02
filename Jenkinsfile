@@ -8,9 +8,7 @@ pipeline {
     }
     environment {
         MAVEN_OPTS = '-Dmaven.repo.local=/var/jenkins_home/.m2/repository' // Use local Maven repo
-        DB_HOST = 'host.docker.internal'
-        DB_PORT = '3306'
-        DB_NAME = 'employees'
+        DB_URL = 'jdbc:mariadb://host.docker.internal:3306/employees'
         DB_USER = 'root'
         DB_PASSWORD = 'test1234'
     }
@@ -28,11 +26,9 @@ pipeline {
             steps {
                 echo "Acceptance stage"
                 sh "./mvnw -B integration-test -Dbuild.number=${BUILD_NUMBER} \
-                    -Ddb.host=${DB_HOST} \
-                    -Ddb.port=${DB_PORT} \
-                    -Ddb.name=${DB_NAME} \
-                    -Ddb.user=${DB_USER} \
-                    -Ddb.password=${DB_PASSWORD}"
+                    -Dtest.datasource.url=${DB_URL} \
+                    -Dtest.datasource.username=${DB_USER} \
+                    -Dtest.datasource.password=${DB_PASSWORD}"
             }
         }   
     }
