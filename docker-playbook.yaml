@@ -49,3 +49,5 @@
       register: output
       environment:
         SERVER_PORT: 80
+        # for use with jenkins the image name (changing) should be passed to
+        IMAGE_NAME: "{{ imageName | default('mborbas/employees:latest') }}"

@@ -1,0 +1,7 @@
+FROM python:latest
+
+RUN pip install pip --upgrade
+
+RUN pip install ansible
+
+RUN adduser --uid 1000 jenkins

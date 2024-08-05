@@ -23,7 +23,9 @@ services:
     #original code
     # image: employees:1.0.0
     #if using ansible to deploy to aws -> pull is from dockerhub
-    image: mborbas/employees:1.0.0
+    # image: mborbas/employees:1.0.0
+    #if using jenkins to deploy -> image name is changing (coming from docker-playbook.yaml)
+    image: ${IMAGE_NAME:-mborbas/employees:latest}
     depends_on:
       mariadb:
          condition: service_healthy

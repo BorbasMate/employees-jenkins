@@ -37,29 +37,29 @@ pipeline {
                 // second code before versioning 
                 // sh "./mvnw -B package -Dbuild.number=${BUILD_NUMBER}"
                 // code before creating zip report for e2e tetst -> commented out to speed up
-                // sh "./mvnw -B clean package -Dbuild.number=${BUILD_NUMBER}"
+                sh "./mvnw -B clean package -Dbuild.number=${BUILD_NUMBER}"
             }
         } 
         stage('Acceptance') {
             steps {
                 echo "Acceptance stage"
                 // code before creating zip report for e2e tetst -> commented out to speed up
-                // sh "./mvnw -B integration-test -Dbuild.number=${BUILD_NUMBER} \
-                //     -Dtest.datasource.url=${DB_URL} \
-                //     -Dtest.datasource.username=${DB_USER} \
-                //     -Dtest.datasource.password=${DB_PASSWORD}"
+                sh "./mvnw -B integration-test -Dbuild.number=${BUILD_NUMBER} \
+                    -Dtest.datasource.url=${DB_URL} \
+                    -Dtest.datasource.username=${DB_USER} \
+                    -Dtest.datasource.password=${DB_PASSWORD}"
             }
         } 
         stage('Docker') {
             steps {
                 echo "Docker stage"
                 // code before creating zip report for e2e tetst -> commented out to speed up
-                // sh "docker build -f Dockerfile.layered -t ${IMAGE_NAME} ."
-                // sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u=${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
-                // sh "docker push ${IMAGE_NAME}"
-                // // we also push the image with latest tag, to be fully precize
-                // sh "docker tag ${IMAGE_NAME} mborbas/employees:latest"
-                // sh "docker push mborbas/employees:latest"                
+                sh "docker build -f Dockerfile.layered -t ${IMAGE_NAME} ."
+                sh "echo ${DOCKERHUB_CREDENTIALS_PSW} | docker login -u=${DOCKERHUB_CREDENTIALS_USR} --password-stdin"
+                sh "docker push ${IMAGE_NAME}"
+                // we also push the image with latest tag, to be fully precize
+                sh "docker tag ${IMAGE_NAME} mborbas/employees:latest"
+                sh "docker push mborbas/employees:latest"                
             }
         } 
         stage('Quality') {
@@ -73,8 +73,8 @@ pipeline {
                             sh 'rm -rf reports'
                             sh 'mkdir reports'
                             //code before sonarqube (Code quality) stage -> commented out to speed up
-                            // sh 'docker compose -f docker-compose.yaml -f docker-compose.jenkins.yaml up --abort-on-container-exit'  
-                            // archiveArtifacts artifacts: 'reports/*.html', fingerprint: true                  
+                            sh 'docker compose -f docker-compose.yaml -f docker-compose.jenkins.yaml up --abort-on-container-exit'  
+                            archiveArtifacts artifacts: 'reports/*.html', fingerprint: true                  
                         }
                     }
                 } 
@@ -82,8 +82,36 @@ pipeline {
                     steps {
                         echo "Code quality"
                         // code before parallel run -> commented out to speed up
-                        // sh "./mvnw sonar:sonar -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.login=${SONAR_CREDENTIALS_PSW}"
+                        sh "./mvnw sonar:sonar -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.login=${SONAR_CREDENTIALS_PSW}"
                     }
+                }
+            }
+        }
+        // NO AWS credentials added to Jenkins , so this does not work (No EC2 instance on AWS for this purpose)
+        stage('Deploy') {
+            agent {
+                dockerfile {
+                    filename 'Dockerfile.ansible'
+                }
+            }
+            steps {
+                script {
+                    env.DEFAULT_LOCAL_TMP = env.WORKSPACE_TMP
+                    env.HOME = env.WORKSPACE
+
+                    //add manual step to Jenkins to ask user
+                    def isDeployAllowed = input(message: 'Deploy?', parameters: [
+                            [$class: 'ChoiceParameterDefinition', choices: "Yes\nNo", name: 'deploy'],
+                        ])
+                    print("${isDeployAllowed}")
+                    if (isDeployAllowed == 'No') {
+                        currentBuild.result = 'ABORTED'
+                        error('Manual stop.')
+                    }
+
+                }
+                sshagent(credentials : ['aws-credentials']) {
+                    sh "ansible-playbook docker-playbook.yaml -i inventory.yaml -e imageName=${IMAGE_NAME}"
                 }
             }
         }
