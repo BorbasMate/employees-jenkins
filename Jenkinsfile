@@ -62,25 +62,33 @@ pipeline {
                 // sh "docker push mborbas/employees:latest"                
             }
         } 
-        stage('E2E API') {            
-            steps {
-                //start in employees-postman folder
-                dir('employees-postman') {
-                    sh 'rm -rf reports'
-                    sh 'mkdir reports'
-                    //code before sonarqube (Code quality) stage -> commented out to speed up
-                    // sh 'docker compose -f docker-compose.yaml -f docker-compose.jenkins.yaml up --abort-on-container-exit'  
-                    // archiveArtifacts artifacts: 'reports/*.html', fingerprint: true                  
+        stage('Quality') {
+            parallel {
+                stage('E2E API') {            
+                    steps {
+                        echo "E2E API"
+                        //start in employees-postman folder
+                        dir('employees-postman') {
+                            sh 'rm -rf reports'
+                            sh 'mkdir reports'
+                            //code before sonarqube (Code quality) stage -> commented out to speed up
+                            // sh 'docker compose -f docker-compose.yaml -f docker-compose.jenkins.yaml up --abort-on-container-exit'  
+                            // archiveArtifacts artifacts: 'reports/*.html', fingerprint: true                  
+                        }
+                    }
+                } 
+                stage('Code quality') {
+                    steps {
+                        echo "Code quality"
+                        // code before parallel run -> commented out to speed up
+                        // sh "./mvnw sonar:sonar -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.login=${SONAR_CREDENTIALS_PSW}"
+                    }
                 }
-            }
-        } 
-        stage('Code quality') {
-            steps {
-                sh "./mvnw sonar:sonar -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.login=${SONAR_CREDENTIALS_PSW}"
             }
         }
 
     }
+    
     post {
         success {
             echo 'Pipeline succeeded!'
