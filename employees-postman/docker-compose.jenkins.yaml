@@ -11,7 +11,8 @@ services:
   employees-newman:
       volumes:      
       - jenkins-data:/var/jenkins_home
-      entrypoint: ["/var/jenkins_home/workspace/employees/employees-postman/wait/wait-for-it.sh", "-t", "30", "employees-app:8080", "--", "newman", "run", "employees.postman_collection.json", "-e", "test.postman_environment.json", "-r", "cli,htmlextra", "--reporter-htmlextra-export", "/var/jenkins_home/workspace/employees/employees-postman/reports"]
+      entrypoint: ["/var/jenkins_home/workspace/employees-jenkins/employees-postman/wait/wait-for-it.sh", "-t", "30", "employees-app:8080", "--", "newman", "run", "employees.postman_collection.json", "-e", "test.postman_environment.json", "-r", "cli,htmlextra", "--reporter-htmlextra-export", "/var/jenkins_home/workspace/employees-jenkins/employees-postman/reports"]
+ 
 
 volumes:
   jenkins-data:
