@@ -56,6 +56,14 @@ pipeline {
                 sh "docker tag ${IMAGE_NAME} mborbas/employees:latest"
                 sh "docker push mborbas/employees:latest"                
             }
+        stage('E2E API') {            
+            steps {
+                //start in employees-postman folder
+                dir('employees-postman') {
+                    sh 'docker compose -f docker-compose.yaml -f docker-compose.jenkins.yaml up --abort-on-container-exit'                    
+                }
+            }
+        }
 }  
     }
     post {
