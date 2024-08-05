@@ -63,6 +63,7 @@ pipeline {
             }
         } 
         stage('Quality') {
+            // in order to run stages parallel
             parallel {
                 stage('E2E API') {            
                     steps {
@@ -88,7 +89,7 @@ pipeline {
         }
 
     }
-    
+
     post {
         success {
             echo 'Pipeline succeeded!'
