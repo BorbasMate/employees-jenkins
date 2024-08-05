@@ -25,6 +25,7 @@ pipeline {
                     script: './mvnw help:evaluate -Dexpression=project.version -Dbuild.number=${BUILD_NUMBER} -q -DforceStdout',
                     returnStdout: true).trim()                
         IMAGE_NAME = "mborbas/employees:${VERSION_NUMBER}"
+        SONAR_CREDENTIALS = credentials('sonar-credentials')
     }
         
     stages {
@@ -67,11 +68,17 @@ pipeline {
                 dir('employees-postman') {
                     sh 'rm -rf reports'
                     sh 'mkdir reports'
-                    sh 'docker compose -f docker-compose.yaml -f docker-compose.jenkins.yaml up --abort-on-container-exit'  
-                    archiveArtifacts artifacts: 'reports/*.html', fingerprint: true                  
+                    //code before sonarqube (Code quality) stage -> commented out to speed up
+                    // sh 'docker compose -f docker-compose.yaml -f docker-compose.jenkins.yaml up --abort-on-container-exit'  
+                    // archiveArtifacts artifacts: 'reports/*.html', fingerprint: true                  
                 }
             }
         } 
+        stage('Code quality') {
+            steps {
+                sh "./mvnw sonar:sonar -Dsonar.host.url=http://host.docker.internal:9000 -Dsonar.login=${SONAR_CREDENTIALS_PSW}"
+            }
+        }
 
     }
     post {
